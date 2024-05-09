@@ -1,6 +1,6 @@
 # TESTE | BACKEND | DANIEL RIBEIRO BARCELLOS
 
-Crie um microserviço com os seguintes endpoints após consumir os dados dos mocks acima e retorne o que está sendo solicitado
+Crie um microserviço com os seguintes endpoints após consumir os dados dos mocks abaixo e retorne o que está sendo solicitado
 
 * GET: /compras - Retornar uma lista das compras ordenadas de forma crescente por valor, deve conter o nome dos clientes, cpf dos clientes, dado dos produtos, quantidade das compras e valores
  totais de cada compra.
@@ -28,6 +28,10 @@ java -jar target/teste-backend-digio-api
 ## API's
 * [Lista de Produtos](https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/produtos-mnboX5IPl6VgG390FECTKqHsD9SkLS.json) - Lista de Produtos.
 * [Lista de Clientes e Compras](https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/clientes-Vz1U6aR3GTsjb3W8BRJhcNKmA81pVh.json) - Lista de Clientes e Compras.
+
+## Swagger URL
+
+http://localhost:8000/digio/api/swagger-ui/index.html
 
 ## Built With
 
