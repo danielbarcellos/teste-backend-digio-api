@@ -10,11 +10,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Builder
-public class CarrinhoDTO {
+public class CompraDTO {
 
 	@Getter
 	@Setter
-    private ClienteDTO cliente;
+	private String nome;
+
+	@Getter
+	@Setter
+	private String cpf;
 	
 	@Getter
 	@Setter

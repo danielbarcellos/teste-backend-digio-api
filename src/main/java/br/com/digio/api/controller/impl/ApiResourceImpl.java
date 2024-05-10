@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.digio.api.controller.ApiResource;
-import br.com.digio.api.dto.CarrinhoDTO;
+import br.com.digio.api.dto.CompraDTO;
 import br.com.digio.api.exception.ApiException;
 import br.com.digio.api.service.ApiService;
 
@@ -21,7 +21,7 @@ public class ApiResourceImpl implements ApiResource {
 	private ApiService service;
 
 	@Override
-	public ResponseEntity<List<CarrinhoDTO>> getCompras() throws ApiException {
+	public ResponseEntity<List<CompraDTO>> getCompras() throws ApiException {
 		return new ResponseEntity<>(this.service.getCompras(), HttpStatus.OK);
 	}
 //	@Override

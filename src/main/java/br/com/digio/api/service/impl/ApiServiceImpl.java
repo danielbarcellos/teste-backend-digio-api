@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import br.com.digio.api.dto.CarrinhoDTO;
+import br.com.digio.api.dto.CompraDTO;
 import br.com.digio.api.dto.ClienteDTO;
 import br.com.digio.api.exception.ApiException;
 import br.com.digio.api.model.Aquisicao;
@@ -45,19 +45,17 @@ public class ApiServiceImpl implements ApiService {
 	 * deve conter o nome dos clientes, cpf dos clientes, dado dos produtos, 
 	 * quantidade das compras e valores totais de cada compra.
 	 */
-	public List<CarrinhoDTO> getCompras() throws ApiException {
+	public List<CompraDTO> getCompras() throws ApiException {
 		try {
 			ResponseEntity<Compra[]> entity = this.template.getForEntity(new URI(this.comprasUrl), Compra[].class);
 			
 			List<Compra> carrinho = Arrays.asList(entity.getBody());
 			return carrinho
 				.stream()
-				.map(c -> CarrinhoDTO.builder()
+				.map(c -> CompraDTO.builder()
 							.produtos(toProdutos(c.getCompras()))
-							.cliente(ClienteDTO.builder()
-										.cpf(c.getCpf())
-										.nome(c.getNome())
-									.build())
+							.cpf(c.getCpf())
+							.nome(c.getNome())
 						.build())
 				.sorted((o1, o2) -> o1.getValorTotal().compareTo(o2.getValorTotal()))
 				.collect(Collectors.toList())
