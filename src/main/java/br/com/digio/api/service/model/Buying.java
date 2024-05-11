@@ -1,4 +1,4 @@
-package br.com.digio.api.model;
+package br.com.digio.api.service.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Compra {
+public class Buying {
 
 	private Integer codigo;
 	private Long quantidade;

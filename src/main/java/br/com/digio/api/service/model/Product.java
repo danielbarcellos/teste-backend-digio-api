@@ -1,4 +1,4 @@
-package br.com.digio.api.model;
+package br.com.digio.api.service.model;
 
 import java.math.BigDecimal;
 
@@ -13,11 +13,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(of = "codigo")
-public class Produto {
+public class Product {
 
 	private Integer codigo;
     private String tipo_vinho;
     private BigDecimal preco;
     private String safra;
     private Integer ano_compra;
+    private Long quantidadeComprada;
 }

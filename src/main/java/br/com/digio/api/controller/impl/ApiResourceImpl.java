@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.digio.api.controller.ApiResource;
 import br.com.digio.api.dto.ClienteDTO;
 import br.com.digio.api.dto.CompraDTO;
+import br.com.digio.api.dto.CompraUnicaDTO;
 import br.com.digio.api.dto.ProdutoDTO;
 import br.com.digio.api.exception.ApiException;
 import br.com.digio.api.service.ApiService;
@@ -28,19 +29,19 @@ public class ApiResourceImpl implements ApiResource {
 	}
 
 	@Override
-	public ResponseEntity<CompraDTO> getMaiorCompraPorAno(Integer ano) throws ApiException {
+	public ResponseEntity<CompraUnicaDTO> getMaiorCompraPorAno(Integer ano) throws ApiException {
 		return new ResponseEntity<>(this.service.getMaiorCompraPorAno(ano), HttpStatus.OK);
 	}
 
 //
 	@Override
-	public ResponseEntity<List<ClienteDTO>> getClientesFieis() throws ApiException {
+	public ResponseEntity<List<CompraUnicaDTO>> getClientesFieis() throws ApiException {
 		return new ResponseEntity<>(this.service.getClientesFieis(), HttpStatus.OK);
 	}
 
 //
 	@Override
-	public ResponseEntity<ProdutoDTO> getRecomendacaoClientePorTipo(String cpf, String tipo) throws ApiException {
+	public ResponseEntity<CompraUnicaDTO> getRecomendacaoClientePorTipo(String cpf, String tipo) throws ApiException {
 		return new ResponseEntity<>(this.service.getRecomendacaoClientePorTipo(cpf, tipo), HttpStatus.OK);
 	}
 

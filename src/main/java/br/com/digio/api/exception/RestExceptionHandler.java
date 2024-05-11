@@ -50,6 +50,7 @@ public class RestExceptionHandler {
 	logger.warn(REGISTRO_NAO_LOCALIZADO_MESSAGE);
 
 	ApiErrorDTO apiError = new ApiErrorDTO(HttpStatus.NOT_FOUND);
+	apiError.setErrorCode(HttpStatus.NOT_FOUND.value());
     apiError.setMessage(REGISTRO_NAO_LOCALIZADO_MESSAGE);
     return buildResponseEntityApiError(apiError);
   }
@@ -58,6 +59,7 @@ public class RestExceptionHandler {
   protected ResponseEntity<ApiErrorDTO> handleIOException(Exception ex) {
     logger.catching(ex);
     ApiErrorDTO apiError = new ApiErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR);
+    apiError.setErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
     apiError.setMessage(ex.getMessage());
     return buildResponseEntityApiError(apiError);
   }
@@ -67,6 +69,7 @@ public class RestExceptionHandler {
     logger.catching(ex);
 
     ApiErrorDTO apiError = new ApiErrorDTO(ex.getStatusCode());
+    apiError.setErrorCode(ex.getStatusCode().value());
     apiError.setMessage(ex.getMessage());
     apiError.setDebugMessage(ex.getResponseBodyAsString());
     return buildResponseEntityApiError(apiError);
@@ -77,6 +80,7 @@ public class RestExceptionHandler {
 	  logger.warn(ex.getMessage());
 	  
 	  ApiErrorDTO apiError = new ApiErrorDTO(ex.getCode());
+	  apiError.setErrorCode(ex.getCode().value());
 	  apiError.setMessage(ex.getMessage());
 	  apiError.setDebugMessage(ex.getResponseBody());
 	  return buildResponseEntityApiError(apiError);
@@ -100,6 +104,7 @@ public class RestExceptionHandler {
     logger.catching(ex);
 
     ApiErrorDTO apiError = new ApiErrorDTO(HttpStatus.BAD_REQUEST);
+    apiError.setErrorCode(HttpStatus.BAD_REQUEST.value());
     apiError.setMessage(ex.getMessage());
     return buildResponseEntityApiError(apiError);
   }
@@ -130,6 +135,7 @@ public class RestExceptionHandler {
     logger.catching(ex);
 
     ApiErrorDTO apiError = new ApiErrorDTO(HttpStatus.SERVICE_UNAVAILABLE);
+    apiError.setErrorCode(HttpStatus.SERVICE_UNAVAILABLE.value());
     apiError.setMessage(ex.getMessage());
     apiError.setDebugMessage(ex.getResponseBodyAsString());
     return buildResponseEntityApiError(apiError);
@@ -141,6 +147,7 @@ public class RestExceptionHandler {
     logger.catching(ex);
 
     ApiErrorDTO apiError = new ApiErrorDTO(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    apiError.setErrorCode(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
     apiError.setMessage(ex.getMessage());
     return buildResponseEntityApiError(apiError);
   }

@@ -1,5 +1,7 @@
 package br.com.digio.api.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,110 +11,131 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import br.com.digio.api.dto.ClienteDTO;
 import br.com.digio.api.dto.CompraDTO;
+import br.com.digio.api.dto.CompraUnicaDTO;
 import br.com.digio.api.dto.ProdutoDTO;
 import br.com.digio.api.exception.ApiException;
-import br.com.digio.api.model.Compra;
-import br.com.digio.api.model.Produto;
-import br.com.digio.api.model.Purchase;
 import br.com.digio.api.service.ApiService;
-import br.com.digio.api.service.CompraService;
-import br.com.digio.api.service.ProdutoService;
+import br.com.digio.api.service.ProductService;
+import br.com.digio.api.service.PurchaseService;
+import br.com.digio.api.service.model.Buying;
+import br.com.digio.api.service.model.Product;
+import br.com.digio.api.service.model.Purchase;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Service
 public class ApiServiceImpl implements ApiService {
 
-	@Autowired
-	private ProdutoService produdoService;
+	private ProductService productService;
 
+	private PurchaseService purchaseService;
+	
 	@Autowired
-	private CompraService compraService;
+	public ApiServiceImpl(ProductService productService, PurchaseService purchaseService) {
+		this.productService = productService;
+		this.purchaseService = purchaseService;
+	}
 	
 	@Override
-	public CompraDTO getMaiorCompraPorAno(Integer ano) throws ApiException {
-		List<Purchase> all = this.compraService.getAll();
-		List<CompraDTO> data = new ArrayList<>();
+	public CompraUnicaDTO getMaiorCompraPorAno(Integer ano) throws ApiException {
+		List<Purchase> all = this.purchaseService.getAll();
+		
+		final List<CompraUnicaDTO> data = new ArrayList<>();
 
-		for (Purchase p : all) {
-			List<Compra> compras = p.getCompras();
+		all
+			.stream()
+			.forEach(purchase -> data
+				.addAll(purchase.getCompras()
+					.stream()
+					.map(this::convertBuyingIntoProduct)
+					.filter(p -> ano.compareTo(p.getAno_compra()) == 0)
+					.map(p -> CompraUnicaDTO.builder()
+								.cpf(purchase.getCpf())
+								.nome(purchase.getNome())
+								.codigo(p.getCodigo())
+								.precoUnitario(p.getPreco())
+								.safra(p.getSafra())
+								.tipoVinho(p.getTipo_vinho())
+								.quantidade(p.getQuantidadeComprada())
+								.anoCompra(p.getAno_compra())
+							.build())
+					.collect(Collectors.toList())))
 			
-			for (Compra compra : compras) {
-				Optional<Produto> optional = this.produdoService.getProdutoById(compra.getCodigo());
-				
-				if(optional.isPresent() && ano.compareTo(optional.get().getAno_compra()) == 0) {
-					CompraDTO cliente = CompraDTO.builder()
-						.cpf(p.getCpf())
-						.nome(p.getNome())
-					.build();
-					
-					Produto produto = optional.get();
-					
-					if(!data.contains(cliente)) {
-						data.add(cliente);
-					}
-					
-					List<ProdutoDTO> produtos = cliente.getProdutos();
-					
-					produtos.add(ProdutoDTO.builder()
-							.codigo(compra.getCodigo())
-							.precoTotal(produto.getPreco().multiply(BigDecimal.valueOf(compra.getQuantidade())))
-							.quantidade(compra.getQuantidade())
-							.safra(produto.getSafra())
-							.tipoVinho(produto.getTipo_vinho())
-							.build());
-					
-					cliente.setProdutos(produtos);
-				}
-			}
-		}
+		;
 		
 		return data.stream().sorted((o1, o2) -> o2.getValorTotal().compareTo(o1.getValorTotal())).findFirst().orElseThrow();
+	}
+	
+	@Override
+	public CompraUnicaDTO getRecomendacaoClientePorTipo(String cpf, String tipo) throws ApiException {
+		
+		List<Purchase> all = this.purchaseService.getAll();
+		
+		final List<CompraUnicaDTO> data = new ArrayList<>();
+
+		all
+			.stream()
+			.filter(f -> equalsIgnoreCase(cpf, f.getCpf()))
+			.forEach(purchase -> data
+				.addAll(purchase.getCompras()
+					.stream()
+					.map(this::convertBuyingIntoProduct)
+					.filter(p -> equalsIgnoreCase(tipo, p.getTipo_vinho()))
+					.map(p -> CompraUnicaDTO.builder()
+								.cpf(purchase.getCpf())
+								.nome(purchase.getNome())
+								.codigo(p.getCodigo())
+								.precoUnitario(p.getPreco())
+								.safra(p.getSafra())
+								.tipoVinho(p.getTipo_vinho())
+								.quantidade(p.getQuantidadeComprada())
+								.anoCompra(p.getAno_compra())
+							.build())
+					.collect(Collectors.toList())))
+			
+		;
+		
+		return data.stream().sorted((o1, o2) -> o2.getQuantidade().compareTo(o1.getQuantidade())).findFirst().orElseThrow();
 	}
 
 	public List<CompraDTO> getCompras() throws ApiException {
 
-		List<Purchase> all = this.compraService.getAll();
+		List<Purchase> all = this.purchaseService.getAll();
 
 		return all.stream()
 				.map(c -> CompraDTO.builder()
 						.cpf(c.getCpf())
 						.nome(c.getNome())
-						.produtos(this.getProdutos(c.getCompras()))
+						.produtos(this.toProductsFromBuyings(c.getCompras()))
 					.build())
 				.sorted((o1, o2) -> o1.getValorTotal().compareTo(o2.getValorTotal()))
 				.collect(Collectors.toList());
 	}
 	
 	@Override
-	public List<ClienteDTO> getClientesFieis() throws ApiException {
+	public List<CompraUnicaDTO> getClientesFieis() throws ApiException {
 
-		List<Purchase> all = this.compraService.getAll();
+		List<Purchase> all = this.purchaseService.getAll();
 
-		List<ClienteDTO> data = new ArrayList<>();
+		final List<CompraUnicaDTO> data = new ArrayList<>();
 		
-		for (Purchase purchase : all) {
-			List<Compra> compras = purchase.getCompras();
-			
-			for (Compra compra : compras) {
-				Produto p = this.produdoService.getProdutoById(compra.getCodigo()).get();
-				data.add(ClienteDTO.builder()
-						.cpf(purchase.getCpf())
-						.nome(purchase.getNome())
-						.quantidade(compra.getQuantidade())
-						.valorTotal(p.getPreco().multiply(BigDecimal.valueOf(compra.getQuantidade())))
-						.produto(ProdutoDTO.builder()
-									.codigo(p.getCodigo())
-									.precoTotal(p.getPreco())
-									.quantidade(compra.getQuantidade())
-									.safra(p.getSafra())
-									.tipoVinho(p.getTipo_vinho())
-								.build())
-					.build());
-			}
-		}
+		all
+			.forEach(purchase -> data.addAll(purchase.getCompras()
+					.stream()
+					.map(this::convertBuyingIntoProduct)
+					.map(p -> CompraUnicaDTO.builder()
+							.cpf(purchase.getCpf())
+							.nome(purchase.getNome())
+							.codigo(p.getCodigo())
+							.precoUnitario(p.getPreco())
+							.safra(p.getSafra())
+							.tipoVinho(p.getTipo_vinho())
+							.quantidade(p.getQuantidadeComprada())
+							.anoCompra(p.getAno_compra())
+						.build())
+					.collect(Collectors.toList())))
+		;
 		
 		return data.stream()
 				.sorted((o1, o2) -> o2.getQuantidade().compareTo(o1.getQuantidade()))
@@ -121,23 +144,17 @@ public class ApiServiceImpl implements ApiService {
 			.subList(0, 3);
 	}
 	
-	@Override
-	public ProdutoDTO getRecomendacaoClientePorTipo(String cpf, String tipo) throws ApiException {
-		// TODO Auto-generated method stub
-		return null;
+	private List<ProdutoDTO> toProductsFromBuyings(List<Buying> compras) {
+		return compras.stream().map(this::toProductFromBuying).collect(Collectors.toList());
 	}
 	
-	private List<ProdutoDTO> getProdutos(List<Compra> compras) {
-		return compras.stream().map(this::getProdutosPorCompra).collect(Collectors.toList());
-	}
-	
-	private ProdutoDTO getProdutosPorCompra(Compra c) {
-		Optional<Produto> optional = this.produdoService.getProdutoById(c.getCodigo());
+	private ProdutoDTO toProductFromBuying(Buying buying) {
+		Optional<Product> optional = this.productService.getProdutoById(buying.getCodigo());
 		
-		return getProductFromOptional(c, optional);
+		return toProductFromBuyingAndOptional(buying, optional);
 	}
 	
-	private ProdutoDTO getProductFromOptional(Compra c, Optional<Produto> optional) {
+	private ProdutoDTO toProductFromBuyingAndOptional(Buying c, Optional<Product> optional) {
 		if (optional.isPresent()) {
 			return ProdutoDTO.builder()
 					.codigo(optional.get().getCodigo())
@@ -148,5 +165,11 @@ public class ApiServiceImpl implements ApiService {
 		}
 		
 		return null;
+	}
+
+	private Product convertBuyingIntoProduct(Buying buying) {
+		Product product = this.productService.getProdutoById(buying.getCodigo()).orElseThrow();
+		product.setQuantidadeComprada(buying.getQuantidade());
+		return product;
 	}
 }

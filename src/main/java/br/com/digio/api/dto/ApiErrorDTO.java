@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 public class ApiErrorDTO {
 
   private HttpStatus status;
-  private String errorCode;
+  private Integer errorCode;
   private String message;
   private String debugMessage;
   private List<ApiSubErrorDTO> subErrors;
@@ -63,11 +63,11 @@ public class ApiErrorDTO {
     return message;
   }
 
-  public String getErrorCode() {
+  public Integer getErrorCode() {
     return errorCode;
   }
 
-  public void setErrorCode(String errorCode) {
+  public void setErrorCode(Integer errorCode) {
     this.errorCode = errorCode;
   }
 

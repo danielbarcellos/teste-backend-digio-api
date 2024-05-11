@@ -15,13 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import br.com.digio.api.model.Purchase;
-import br.com.digio.api.service.CompraService;
+import br.com.digio.api.service.PurchaseService;
+import br.com.digio.api.service.model.Purchase;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Service
-public class CompraServiceImpl implements CompraService {
+public class PurchaseServiceImpl implements PurchaseService {
 
 	@Value("${app.compras.url}")
 	private String comprasUrl;

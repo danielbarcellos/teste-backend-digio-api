@@ -1,4 +1,4 @@
-package br.com.digio.api.model;
+package br.com.digio.api.service.model;
 
 import java.util.List;
 
@@ -15,5 +15,5 @@ public class Purchase {
 
 	private String nome;
 	private String cpf;
-	private List<Compra> compras;
+	private List<Buying> compras;
 }

@@ -2,9 +2,9 @@ package br.com.digio.api.service;
 
 import java.util.List;
 
-import br.com.digio.api.model.Purchase;
+import br.com.digio.api.service.model.Purchase;
 
-public interface CompraService {
+public interface PurchaseService {
 
 	List<Purchase> getAll();
 
