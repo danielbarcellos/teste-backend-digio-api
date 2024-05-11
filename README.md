@@ -25,13 +25,13 @@ git clone ...
 mvn -U clean install
 java -jar target/teste-backend-digio-api
 ```
+
+## Swagger URL
+* [URL de SWAGGER](http://localhost:8000/digio/api/swagger-ui/index.html) - Url da documentação da api.
+  
 ## API's
 * [Lista de Produtos](https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/produtos-mnboX5IPl6VgG390FECTKqHsD9SkLS.json) - Lista de Produtos.
 * [Lista de Clientes e Compras](https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/clientes-Vz1U6aR3GTsjb3W8BRJhcNKmA81pVh.json) - Lista de Clientes e Compras.
-
-## Swagger URL
-
-http://localhost:8000/digio/api/swagger-ui/index.html
 
 ## Built With
 
