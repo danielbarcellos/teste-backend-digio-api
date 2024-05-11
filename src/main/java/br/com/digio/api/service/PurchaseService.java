@@ -7,8 +7,4 @@ import br.com.digio.api.service.model.Purchase;
 public interface PurchaseService {
 
 	List<Purchase> getAll();
-
-	List<Purchase> getAllByAno(Integer ano);
-
-	List<Purchase> getAllByProdutoId(Integer id);
 }

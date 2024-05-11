@@ -26,12 +26,21 @@ public class PurchaseServiceImpl implements PurchaseService {
 	@Value("${app.compras.url}")
 	private String comprasUrl;
 
-	private final RestTemplate template = new RestTemplate();
+	private RestTemplate template;
+
+	public PurchaseServiceImpl() {
+		this.template = new RestTemplate();
+	}
 	
-	private static final List<Purchase> CACHE = Collections.synchronizedList(new ArrayList<>());
+	public PurchaseServiceImpl(RestTemplate template, String comprasUrl) {
+		this.template = template;
+		this.comprasUrl = comprasUrl;
+	}
+	
+	private final List<Purchase> CACHE = Collections.synchronizedList(new ArrayList<>());
 	
 	@PostConstruct
-	private void onPostConstruct() throws RestClientException, URISyntaxException {
+	public void onPostConstruct() throws RestClientException, URISyntaxException {
 		if(CACHE.isEmpty()) {
 			ResponseEntity<Purchase[]> entity = this.template.getForEntity(new URI(this.comprasUrl), Purchase[].class);
 			CACHE.addAll(Arrays.asList(entity.getBody()));
@@ -49,37 +58,8 @@ public class PurchaseServiceImpl implements PurchaseService {
 
 		return Collections.emptyList();
 	}
-
-	@Override
-	public List<Purchase> getAllByAno(Integer ano) {
-		try {
-			this.onPostConstruct();
-			
-			return CACHE;
-		} catch (RestClientException | URISyntaxException e) {
-			log.error(e.getMessage(), e);
-		}
-		
-		return Collections.emptyList();
-	}
-
-	@Override
-	public List<Purchase> getAllByProdutoId(Integer id) {
-		try {
-			this.onPostConstruct();
-			
-//			return CACHE
-//					.stream()
-//					.filter(c -> c.getCompras().contains(Aquisicao.builder()
-//							.codigo(id)
-//						.build()))
-//					.collect(Collectors.toList())
-//			;
-			
-		} catch (RestClientException | URISyntaxException e) {
-			log.error(e.getMessage(), e);
-		}
-		
-		return Collections.emptyList();
+	
+	public List<Purchase> getCACHE() {
+		return CACHE;
 	}
 }

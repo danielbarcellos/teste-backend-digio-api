@@ -9,10 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.digio.api.controller.ApiResource;
-import br.com.digio.api.dto.ClienteDTO;
 import br.com.digio.api.dto.CompraDTO;
 import br.com.digio.api.dto.CompraUnicaDTO;
-import br.com.digio.api.dto.ProdutoDTO;
 import br.com.digio.api.exception.ApiException;
 import br.com.digio.api.service.ApiService;
 

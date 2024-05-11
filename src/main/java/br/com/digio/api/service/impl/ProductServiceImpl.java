@@ -27,12 +27,21 @@ public class ProductServiceImpl implements ProductService {
 	@Value("${app.produtos.url}")
 	private String produtoUrl;
 	
-	RestTemplate template = new RestTemplate();
+	private RestTemplate template;
 
-	private static final List<Product> PRODUTO_CACHE = Collections.synchronizedList(new ArrayList<>());
+	public ProductServiceImpl() {
+		this.template = new RestTemplate();
+	}
+	
+	public ProductServiceImpl(RestTemplate template, String produtoUrl) {
+		this.template = template;
+		this.produtoUrl = produtoUrl;
+	}
+
+	private final List<Product> PRODUTO_CACHE = Collections.synchronizedList(new ArrayList<>());
 	
 	@PostConstruct
-	private void onPostConstruct() throws RestClientException, URISyntaxException {
+	public void onPostConstruct() throws RestClientException, URISyntaxException {
 		if(PRODUTO_CACHE.isEmpty()) {
 			ResponseEntity<Product[]> entity = this.template.getForEntity(new URI(this.produtoUrl), Product[].class);
 			PRODUTO_CACHE.addAll(Arrays.asList(entity.getBody())) ;
@@ -59,22 +68,7 @@ public class ProductServiceImpl implements ProductService {
 		return Optional.empty();
 	}
 	
-	@Override
-	public Optional<Product> getAllByCodigoAndAno(Integer produtoId, Integer ano) {
-		try {
-			if(PRODUTO_CACHE.isEmpty()) {
-				ResponseEntity<Product[]> entity = this.template.getForEntity(new URI(this.produtoUrl), Product[].class);
-				PRODUTO_CACHE.addAll(Arrays.asList(entity.getBody())) ;
-			}
-			
-			
-			return PRODUTO_CACHE.stream()
-						.filter(p -> ano.compareTo(p.getAno_compra()) == 0 && produtoId.compareTo(p.getCodigo()) == 0)
-					.findFirst();
-			
-		} catch (RestClientException | URISyntaxException e) {
-			log.warn(e.getMessage());
-		}
-		return Optional.empty();
+	public List<Product> getProdutoCache() {
+		return PRODUTO_CACHE;
 	}
 }
