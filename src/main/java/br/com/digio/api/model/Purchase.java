@@ -1,5 +1,6 @@
-
 package br.com.digio.api.model;
+
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,12 +9,11 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class Aquisicao {
+@NoArgsConstructor
+public class Purchase {
 
-	private Integer codigo;
-
-	private Integer quantidade;
-
+	private String nome;
+	private String cpf;
+	private List<Compra> compras;
 }

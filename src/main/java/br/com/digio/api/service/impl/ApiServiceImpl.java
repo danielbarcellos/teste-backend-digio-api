@@ -1,130 +1,152 @@
 package br.com.digio.api.service.impl;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
-import br.com.digio.api.dto.CompraDTO;
 import br.com.digio.api.dto.ClienteDTO;
+import br.com.digio.api.dto.CompraDTO;
+import br.com.digio.api.dto.ProdutoDTO;
 import br.com.digio.api.exception.ApiException;
-import br.com.digio.api.model.Aquisicao;
 import br.com.digio.api.model.Compra;
 import br.com.digio.api.model.Produto;
+import br.com.digio.api.model.Purchase;
 import br.com.digio.api.service.ApiService;
-import br.com.digio.api.service.ProdudoService;
+import br.com.digio.api.service.CompraService;
+import br.com.digio.api.service.ProdutoService;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Service
 public class ApiServiceImpl implements ApiService {
-	
-	@Value("${app.produtos.url}")
-	private String produtosUrl;
-	
-	@Value("${app.compras.url}")
-	private String comprasUrl;
-	
+
 	@Autowired
-	private ProdudoService produdoService;
+	private ProdutoService produdoService;
 
-	private final RestTemplate template = new RestTemplate();
+	@Autowired
+	private CompraService compraService;
 	
-	
-	/**
-	 * Retornar uma lista das compras ordenadas de forma crescente por valor,
-	 * deve conter o nome dos clientes, cpf dos clientes, dado dos produtos, 
-	 * quantidade das compras e valores totais de cada compra.
-	 */
-	public List<CompraDTO> getCompras() throws ApiException {
-		try {
-			ResponseEntity<Compra[]> entity = this.template.getForEntity(new URI(this.comprasUrl), Compra[].class);
+	@Override
+	public CompraDTO getMaiorCompraPorAno(Integer ano) throws ApiException {
+		List<Purchase> all = this.compraService.getAll();
+		List<CompraDTO> data = new ArrayList<>();
+
+		for (Purchase p : all) {
+			List<Compra> compras = p.getCompras();
 			
-			List<Compra> carrinho = Arrays.asList(entity.getBody());
-			return carrinho
-				.stream()
+			for (Compra compra : compras) {
+				Optional<Produto> optional = this.produdoService.getProdutoById(compra.getCodigo());
+				
+				if(optional.isPresent() && ano.compareTo(optional.get().getAno_compra()) == 0) {
+					CompraDTO cliente = CompraDTO.builder()
+						.cpf(p.getCpf())
+						.nome(p.getNome())
+					.build();
+					
+					Produto produto = optional.get();
+					
+					if(!data.contains(cliente)) {
+						data.add(cliente);
+					}
+					
+					List<ProdutoDTO> produtos = cliente.getProdutos();
+					
+					produtos.add(ProdutoDTO.builder()
+							.codigo(compra.getCodigo())
+							.precoTotal(produto.getPreco().multiply(BigDecimal.valueOf(compra.getQuantidade())))
+							.quantidade(compra.getQuantidade())
+							.safra(produto.getSafra())
+							.tipoVinho(produto.getTipo_vinho())
+							.build());
+					
+					cliente.setProdutos(produtos);
+				}
+			}
+		}
+		
+		return data.stream().sorted((o1, o2) -> o2.getValorTotal().compareTo(o1.getValorTotal())).findFirst().orElseThrow();
+	}
+
+	public List<CompraDTO> getCompras() throws ApiException {
+
+		List<Purchase> all = this.compraService.getAll();
+
+		return all.stream()
 				.map(c -> CompraDTO.builder()
-							.produtos(toProdutos(c.getCompras()))
-							.cpf(c.getCpf())
-							.nome(c.getNome())
-						.build())
+						.cpf(c.getCpf())
+						.nome(c.getNome())
+						.produtos(this.getProdutos(c.getCompras()))
+					.build())
 				.sorted((o1, o2) -> o1.getValorTotal().compareTo(o2.getValorTotal()))
-				.collect(Collectors.toList())
-			;
-		} catch (RestClientException | URISyntaxException e) {
-			throw new ApiException(e.getMessage(), e);
-		}
+				.collect(Collectors.toList());
 	}
+	
+	@Override
+	public List<ClienteDTO> getClientesFieis() throws ApiException {
 
+		List<Purchase> all = this.compraService.getAll();
 
-	private List<Produto> toProdutos(List<Aquisicao> compras) {
-		return compras
-				.stream()
-				.map(this::toProduto)
-				.collect(Collectors.toList())
-				;
-	}
-
-
-	private Produto toProduto(Aquisicao a) {
-		Optional<Produto> oProduto = this.produdoService.getProdutoById(a.getCodigo());
-		if(oProduto.isPresent()) {
-			return oProduto.get();
+		List<ClienteDTO> data = new ArrayList<>();
+		
+		for (Purchase purchase : all) {
+			List<Compra> compras = purchase.getCompras();
+			
+			for (Compra compra : compras) {
+				Produto p = this.produdoService.getProdutoById(compra.getCodigo()).get();
+				data.add(ClienteDTO.builder()
+						.cpf(purchase.getCpf())
+						.nome(purchase.getNome())
+						.quantidade(compra.getQuantidade())
+						.valorTotal(p.getPreco().multiply(BigDecimal.valueOf(compra.getQuantidade())))
+						.produto(ProdutoDTO.builder()
+									.codigo(p.getCodigo())
+									.precoTotal(p.getPreco())
+									.quantidade(compra.getQuantidade())
+									.safra(p.getSafra())
+									.tipoVinho(p.getTipo_vinho())
+								.build())
+					.build());
+			}
 		}
+		
+		return data.stream()
+				.sorted((o1, o2) -> o2.getQuantidade().compareTo(o1.getQuantidade()))
+				.sorted((o1, o2) -> o2.getValorTotal().compareTo(o1.getValorTotal()))
+				.collect(Collectors.toList())
+			.subList(0, 3);
+	}
+	
+	@Override
+	public ProdutoDTO getRecomendacaoClientePorTipo(String cpf, String tipo) throws ApiException {
+		// TODO Auto-generated method stub
 		return null;
 	}
-
-//	@Override
-//	public Compra getMaiorCompraPorAno(Integer ano) throws ApiException {
-//		try {
-//			ResponseEntity<Compra> entity = this.template.getForEntity(new URI(this.produtosUrl), Compra.class);
-//			
-////			entity.getBody().get
-//		} catch (RestClientException | URISyntaxException e) {
-//			throw new ApiException(e.getMessage(), e);
-//		}
-//		
-//		return null;
-//	}
-//
-//	/**
-//	 * Retornar o Top 3 clientes mais fieis, clientes que possuem mais compras recorrentes com maiores valores.
-//	 */
-//	@Override
-//	public List<CarrinhoDTO> getClientesFieis() throws ApiException {
-//		try {
-//			ResponseEntity<CarrinhoDTO[]> entity = this.template.getForEntity(new URI(this.comprasUrl), CarrinhoDTO[].class);
-//			
-//			return Arrays.asList(entity.getBody())
-//				.stream()
-//				.collect(Collectors.toList());
-//			
-//		} catch (RestClientException | URISyntaxException e) {
-//			throw new ApiException(e.getMessage(), e);
-//		}
-//	}
-//
-//	@Override
-//	public CarrinhoDTO getRecomendacaoClientePorTipo(String cpf, String tipo) throws ApiException {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
-//	private Compra getProduto(Compra compra) {
-//		Optional<Produto> optional = this.produdoService.getProdutoById(compra.getCodigo());
-//		if(optional.isPresent())
-//			compra.setProduto(optional.get());
-//		
-//		return compra;
-//	}
 	
+	private List<ProdutoDTO> getProdutos(List<Compra> compras) {
+		return compras.stream().map(this::getProdutosPorCompra).collect(Collectors.toList());
+	}
+	
+	private ProdutoDTO getProdutosPorCompra(Compra c) {
+		Optional<Produto> optional = this.produdoService.getProdutoById(c.getCodigo());
+		
+		return getProductFromOptional(c, optional);
+	}
+	
+	private ProdutoDTO getProductFromOptional(Compra c, Optional<Produto> optional) {
+		if (optional.isPresent()) {
+			return ProdutoDTO.builder()
+					.codigo(optional.get().getCodigo())
+					.precoTotal(optional.get().getPreco().multiply(BigDecimal.valueOf(c.getQuantidade())))
+					.quantidade(c.getQuantidade()).safra(optional.get().getSafra())
+					.tipoVinho(optional.get().getTipo_vinho())
+					.build();
+		}
+		
+		return null;
+	}
 }
