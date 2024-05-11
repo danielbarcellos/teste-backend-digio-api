@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration packages="biz.paluch.logging.gelf.log4j2" status="WARN" monitorInterval="20">
+    <Properties>
+        <Property name="GRAYLOG_SERVIDOR">${env:LOG_HOST:-tcp:homologacao.com.br}</Property>
+        <Property name="GRAYLOG_PERFIL">${env:LOG_PERFIL:teste-backend-digio-api}</Property>
+        <Property name="GRAYLOG_PORTA">${env:LOG_PORTA:-1514}</Property>
+        <Property name="LOG_LEVEL">${env:LOG_LEVEL:-INFO}</Property>
+    </Properties>
+
+    <Appenders>
+        
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout
+                pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+        </Console>
+
+        <Gelf name="GRAYLOG" host="${GRAYLOG_SERVIDOR}" port="${GRAYLOG_PORTA}" version="1.1" 
+              extractStackTrace="true" filterStackTrace="true" maximumMessageSize="65535" 
+              originHost="%host{fqdn}"
+              additionalFieldTypes="perfil=String">
+            <Field name="perfil" literal="${GRAYLOG_PERFIL}" />
+            <Field name="timestampServidor" pattern="%d{dd MMM yy HH:mm:ss}" />
+            <Field name="tipo" pattern="%level" />
+            <Field name="thread" pattern="%t" />
+            <Field name="category" pattern="%c" />
+        </Gelf>                              
+                
+        <Async name="ASYNC" includeLocation="true" blocking="false">
+            <AppenderRef ref="CONSOLE"/>
+            <AppenderRef ref="GRAYLOG"/>
+        </Async>
+    </Appenders>
+
+    <Loggers>
+        <AsyncLogger name="org.hibernate" level="WARN" additivity="true">
+            <AppenderRef ref="ASYNC"/>
+        </AsyncLogger>
+        <AsyncLogger name="springfox" level="WARN" additivity="true">
+            <AppenderRef ref="ASYNC"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.springframework" level="WARN" additivity="true">
+            <AppenderRef ref="ASYNC"/>
+        </AsyncLogger>
+        <AsyncLogger name="com.ibm" level="ERROR" additivity="true">
+            <AppenderRef ref="ASYNC"/>
+        </AsyncLogger>
+        <AsyncLogger name="com.zaxxer" level="WARN" additivity="true">
+            <AppenderRef ref="ASYNC"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.apache.commons" level="WARN" additivity="true">
+            <AppenderRef ref="ASYNC"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.apache.http" level="WARN" additivity="true">
+            <AppenderRef ref="ASYNC"/>
+        </AsyncLogger>
+        <!-- GERAL -->
+        <Root level="${LOG_LEVEL}" includeLocation="true">
+            <AppenderRef ref="ASYNC"/>
+        </Root>
+    </Loggers>
+</Configuration>
